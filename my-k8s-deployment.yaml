@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jenkins-cicd
+
+---
+
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJodHRwczovL2luZGV4LmRvY2tlci5pby92MS8iOnsidXNlcm5hbWUiOiJiaGFnaTk5IiwicGFzc3dvcmQiOiJkY2tyX3BhdF9tLXhGNDRnUjFiN0xUMTdLc2xtd2dtUHVKZEUiLCJlbWFpbCI6ImJoYWdpLnJhbWFoYWxsYUBnbWFpbC5jb20iLCJhdXRoIjoiWW1oaFoyazVPVHBrWTJ0eVgzQmhkRjl0TFhoR05EUm5VakZpTjB4VU1UZExjMnh0ZDJkdFVIVktaRVU9In19fQ==
+kind: Secret
+metadata:
+  name: regcred
+  namespace: jenkins-cicd
+type: kubernetes.io/dockerconfigjson
+    
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bhagyalaxmi-deployment
+  namespace: jenkins-cicd
+  labels:
+    app: bhagyalaxmi-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bhagyalaxmi-app
+  template:
+    metadata:
+      labels:
+        app: bhagyalaxmi-app
+    spec:
+      containers:
+      - name: bhagyalaxmi-container
+        image: bhagi99/jenkins:latest
+        ports:
+        - containerPort: 8080
+      imagePullSecrets:
+      - name: regcred
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bhagyalaxmi-np-service
+  namespace: jenkins-cicd
+  labels:
+    app: bhagyalaxmi-app
+spec:
+  selector:
+    app: bhagyalaxmi-app
+
+  type: NodePort
+  ports:
+  - nodePort: 31029
+    port: 8080
+    targetPort: 8080
