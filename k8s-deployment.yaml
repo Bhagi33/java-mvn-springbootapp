@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: bhagyalaxmi-container
-        image: loksaieta/bhagyalaxmi-app
+        image: bhagi99/jenkins:latest
         ports:
         - containerPort: 8080
 ---
