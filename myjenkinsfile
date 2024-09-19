@@ -1,0 +1,56 @@
+pipeline {
+
+    agent { label 'slave1' }
+
+        environment {
+                DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+        }
+
+    stages {
+        stage('SCM_Checkout') {
+            steps {
+                echo 'Perform SCM Checkout'
+                                git 'https://github.com/Edu-TCS-DevOps-Aug21/java-mvn-springbootapp.git'
+            }
+        }
+        stage('Application_Build') {
+            steps {
+                echo 'Perform Maven Build'
+                                sh 'mvn -Dmaven.test.failure.ignore=true clean package'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                                sh 'docker version'
+                                sh "docker build -t bhagi99/jenkins:${BUILD_NUMBER} ."
+                                sh 'docker image list'
+                                sh "docker tag bhagi99/jenkins:${BUILD_NUMBER} bhagi99/jenkins:latest"
+            }
+        }
+
+                stage('Login2DockerHub') {
+
+                        steps {
+                                sh 'echo $DOCKERHUB_CREDENTIALS_PSW| docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                        }
+                }
+                stage('Publish_to_Docker_Registry') {
+                        steps {
+                                sh "docker push bhagi99/jenkins:latest"
+                        }
+                }
+              stage('create container on VM') {
+                        steps {
+                            sh "docker run -d bhagi99/jenkins:latest"
+                        }
+                }     
+                
+                
+                stage('k8s deployment'){
+                    steps {
+                        sshPublisher(publishers: [sshPublisherDesc(configName: 'k8smaster', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: 'kubectl create -f k8sdeploy.yaml', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '.', remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'k8sdeploy.yaml')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+                    }
+                }
+               
+    }
+}
