@@ -10,7 +10,8 @@ pipeline {
         stage('SCM_Checkout') {
             steps {
                 echo 'Perform SCM Checkout'
-                                git 'https://github.com/Edu-TCS-DevOps-Aug21/java-mvn-springbootapp.git'
+                                git 'https://github.com/Bhagi33/java-mvn-springbootapp.git'
+
             }
         }
         stage('Application_Build') {
