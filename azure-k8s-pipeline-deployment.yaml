@@ -44,12 +44,12 @@ steps:
   inputs:
     sshEndpoint: 'my-k8s-cluster'
     sourceFolder: '$(System.DefaultWorkingDirectory)'
-    contents: '**/my-k8s-deployment.yaml'
+    contents: '**/azure-k8s-dep-manifest.yaml'
     targetFolder: '/home/devopsadmin'
     readyTimeout: '20000'
 - task: SSH@0
   inputs:
     sshEndpoint: 'my-k8s-cluster'
     runOptions: 'commands'
-    commands: 'kubectl apply -f my-k8s-deployment.yaml'
+    commands: 'kubectl apply -f azure-k8s-dep-manifest.yaml'
     readyTimeout: '20000'
