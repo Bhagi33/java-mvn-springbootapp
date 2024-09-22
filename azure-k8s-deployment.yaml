@@ -1,0 +1,55 @@
+trigger:
+- master
+
+pool:
+  name: 'devops-agent'
+
+
+resources:
+- repo: self
+
+steps:
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'pom.xml'
+    mavenOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: default
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    goals: 'package'
+- task: CopyFiles@2
+  inputs:
+    Contents: '**/*.war'
+    TargetFolder: '$(build.artifactstagingdirectory)'
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'mywebapp'
+    publishLocation: 'Container'
+- task: Docker@2
+  inputs:
+    containerRegistry: 'container-registery'
+    repository: 'container-registery/webapp'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
+    tags: 'latest'
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(Pipeline.Workspace)'
+    artifact: 'k8sconfigfiles'
+    publishLocation: 'pipeline'
+- task: CopyFilesOverSSH@0
+  inputs:
+    sshEndpoint: 'my-k8s-cluster'
+    sourceFolder: '$(System.DefaultWorkingDirectory)'
+    contents: '**/my-k8s-deployment.yaml'
+    targetFolder: '/home/devopsadmin'
+    readyTimeout: '20000'
+- task: SSH@0
+  inputs:
+    sshEndpoint: 'my-k8s-cluster'
+    runOptions: 'commands'
+    commands: 'kubectl apply -f my-k8s-deployment.yaml'
+    readyTimeout: '20000'
